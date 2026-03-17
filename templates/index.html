@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta de Stock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Consulta de Stock desde Excel</h1>
+      <p>Busca por SKU usando un archivo local o una URL de SharePoint protegida con token.</p>
+
+      <form method="post" action="/query" class="card">
+        <label>Origen de datos</label>
+        <select name="source_type">
+          <option value="local">Archivo local (incluye carpeta sincronizada de SharePoint)</option>
+          <option value="sharepoint">URL de SharePoint / Microsoft Graph</option>
+        </select>
+
+        <label>Ruta local del Excel</label>
+        <input type="text" name="local_path" placeholder="/ruta/al/archivo.xlsx" />
+
+        <label>URL del archivo SharePoint/Graph</label>
+        <input type="text" name="sharepoint_url" placeholder="https://.../drive/items/.../content" />
+
+        <label>Token Bearer (solo SharePoint/Graph)</label>
+        <input type="password" name="token" placeholder="eyJ..." />
+
+        <label>Hoja (opcional)</label>
+        <input type="text" name="sheet_name" placeholder="Stock" />
+
+        <label>Nombre columna SKU (opcional)</label>
+        <input type="text" name="sku_column" placeholder="SKU" />
+
+        <label>SKU a buscar</label>
+        <input type="text" name="sku" placeholder="ABC-123" required />
+
+        <button type="submit">Consultar</button>
+      </form>
+
+      {% if error %}
+      <section class="error">{{ error }}</section>
+      {% endif %}
+
+      {% if result %}
+      <section class="card">
+        <h2>Resultados</h2>
+        <p>{{ result.source_description }}</p>
+        <p>Total de coincidencias: <strong>{{ result.records|length }}</strong></p>
+
+        {% if result.records|length > 0 %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                {% for col in result.columns %}
+                <th>{{ col }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in result.records %}
+              <tr>
+                {% for col in result.columns %}
+                <td>{{ row[col] }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p>No se encontraron coincidencias para el SKU indicado.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>
